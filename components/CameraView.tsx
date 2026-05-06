@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  StyleSheet, Text, View, TouchableOpacity, Platform, Image,
+} from 'react-native';
 import { CameraView as ExpoCameraView, useCameraPermissions } from 'expo-camera';
-import { Camera, X, Zap, RefreshCw } from 'lucide-react-native';
-import * as Reanimated from 'react-native-reanimated';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, X, RefreshCw, Image as ImageIcon, CheckCircle } from 'lucide-react-native';
 
 interface CameraViewProps {
   onClose: () => void;
@@ -11,60 +13,156 @@ interface CameraViewProps {
 
 export const CameraView: React.FC<CameraViewProps> = ({ onClose, onCapture }) => {
   const [permission, requestPermission] = useCameraPermissions();
+  const [preview, setPreview] = useState<string | null>(null);
   const cameraRef = useRef<any>(null);
 
-  if (!permission) {
-    return <View />;
-  }
+  // ── Pick from gallery ────────────────────────────────────────────────────────
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Gallery permission is required to upload images.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPreview(result.assets[0].uri);
+    }
+  };
 
+  // ── Take photo with camera ───────────────────────────────────────────────────
+  const handleCapture = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.85 });
+      setPreview(photo.uri);
+    }
+  };
+
+  // ── Confirm and send to AI pipeline ─────────────────────────────────────────
+  const handleConfirm = () => {
+    if (preview) onCapture(preview);
+  };
+
+  // ── Permission screen ────────────────────────────────────────────────────────
+  if (!permission) return <View />;
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>We need your permission to show the camera</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
-        </TouchableOpacity>
+        <View style={styles.permBox}>
+          <Camera size={48} color="#00E5FF" />
+          <Text style={styles.permTitle}>Camera Access Needed</Text>
+          <Text style={styles.permSub}>Required for skin scanning. You can also upload from gallery without camera access.</Text>
+          <TouchableOpacity onPress={requestPermission} style={styles.permBtn}>
+            <Text style={styles.permBtnText}>GRANT CAMERA ACCESS</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePickImage} style={styles.permBtnAlt}>
+            <ImageIcon size={16} color="#00E5FF" />
+            <Text style={styles.permBtnAltText}>Upload from Gallery Instead</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onClose} style={styles.permClose}>
+            <Text style={styles.permCloseText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+        {/* Show preview if user picked from gallery */}
+        {preview && (
+          <View style={styles.previewOverlay}>
+            <Image source={{ uri: preview }} style={styles.previewImage} />
+            <View style={styles.previewActions}>
+              <TouchableOpacity onPress={() => setPreview(null)} style={styles.retakeBtn}>
+                <RefreshCw size={18} color="#FFF" />
+                <Text style={styles.retakeBtnText}>RETAKE</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleConfirm} style={styles.confirmBtn}>
+                <CheckCircle size={18} color="#000" />
+                <Text style={styles.confirmBtnText}>ANALYZE</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
     );
   }
 
-  const handleCapture = async () => {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      onCapture(photo.uri);
-    }
-  };
+  // ── Preview screen (after capture or upload) ─────────────────────────────────
+  if (preview) {
+    return (
+      <View style={styles.container}>
+        <Image source={{ uri: preview }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <View style={styles.previewOverlay}>
+          <View style={styles.topBar}>
+            <TouchableOpacity onPress={() => setPreview(null)} style={styles.iconButton}>
+              <X color="white" size={22} />
+            </TouchableOpacity>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>IMAGE READY</Text>
+            </View>
+            <View style={{ width: 48 }} />
+          </View>
 
+          <View style={styles.reticleContainer}>
+            <View style={styles.reticle} />
+          </View>
+
+          <View style={styles.previewActions}>
+            <TouchableOpacity onPress={() => setPreview(null)} style={styles.retakeBtn}>
+              <RefreshCw size={18} color="#FFF" />
+              <Text style={styles.retakeBtnText}>RETAKE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleConfirm} style={styles.confirmBtn}>
+              <CheckCircle size={18} color="#000" />
+              <Text style={styles.confirmBtnText}>ANALYZE SKIN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Live camera screen ───────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
       <ExpoCameraView style={styles.camera} ref={cameraRef}>
         <View style={styles.overlay}>
+          {/* Top bar */}
           <View style={styles.topBar}>
             <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-              <X color="white" size={24} />
+              <X color="white" size={22} />
             </TouchableOpacity>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>READY FOR SCAN</Text>
             </View>
+            <View style={{ width: 48 }} />
           </View>
 
+          {/* Scan guide */}
           <View style={styles.reticleContainer}>
-             <View style={styles.reticle} />
+            <View style={styles.reticle} />
+            <Text style={styles.guideText}>Centre the skin area inside the circle</Text>
           </View>
 
+          {/* Bottom controls */}
           <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.sideButton}>
-              <Zap color="white" size={24} />
+            {/* Upload from gallery */}
+            <TouchableOpacity onPress={handlePickImage} style={styles.sideButton}>
+              <ImageIcon color="white" size={24} />
+              <Text style={styles.sideLabel}>Gallery</Text>
             </TouchableOpacity>
-            
+
+            {/* Capture button */}
             <TouchableOpacity onPress={handleCapture} style={styles.captureButton}>
               <View style={styles.captureButtonInner}>
-                <Camera color="#000" size={32} />
+                <Camera color="#000" size={30} />
               </View>
             </TouchableOpacity>
 
+            {/* Flip (placeholder) */}
             <TouchableOpacity style={styles.sideButton}>
               <RefreshCw color="white" size={24} />
+              <Text style={styles.sideLabel}>Flip</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -74,16 +172,11 @@ export const CameraView: React.FC<CameraViewProps> = ({ onClose, onCapture }) =>
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  camera: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: '#000' },
+  camera: { flex: 1 },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
     justifyContent: 'space-between',
     padding: 20,
   },
@@ -95,14 +188,14 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 30,
   },
   statusBadge: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 229, 255, 0.2)',
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
     borderWidth: 1,
     borderColor: '#00E5FF',
   },
@@ -116,14 +209,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 16,
   },
   reticle: {
-    width: 250,
-    height: 250,
+    width: 240,
+    height: 240,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 125,
+    borderColor: 'rgba(0, 229, 255, 0.6)',
+    borderRadius: 120,
     borderStyle: 'dashed',
+  },
+  guideText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 11,
+    textAlign: 'center',
   },
   bottomBar: {
     flexDirection: 'row',
@@ -136,7 +235,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: '#00E5FF',
-    padding: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -145,27 +243,123 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: 'rgba(0,0,0,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sideButton: {
-    padding: 15,
+    padding: 14,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 30,
+    alignItems: 'center',
+    gap: 4,
   },
-  text: {
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#00E5FF',
-    padding: 15,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: '#000',
+  sideLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 9,
     fontWeight: 'bold',
-  }
+    letterSpacing: 0.5,
+  },
+
+  // ── Preview ──────────────────────────────────────────────────────────────────
+  previewImage: { width: '100%', height: '100%', position: 'absolute' },
+  previewOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  previewActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 40,
+    justifyContent: 'center',
+  },
+  retakeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  retakeBtnText: {
+    color: '#FFF',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1.5,
+  },
+  confirmBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    backgroundColor: '#00E5FF',
+    borderRadius: 16,
+  },
+  confirmBtnText: {
+    color: '#000',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1.5,
+  },
+
+  // ── Permission ───────────────────────────────────────────────────────────────
+  permBox: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    gap: 16,
+  },
+  permTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  permSub: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  permBtn: {
+    backgroundColor: '#00E5FF',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    width: '100%',
+    alignItems: 'center',
+  },
+  permBtnText: {
+    color: '#000',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1.5,
+  },
+  permBtnAlt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#00E5FF',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  permBtnAltText: {
+    color: '#00E5FF',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  permClose: { marginTop: 8 },
+  permCloseText: { color: 'rgba(255,255,255,0.3)', fontSize: 13 },
 });
