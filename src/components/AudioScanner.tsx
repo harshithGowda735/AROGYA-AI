@@ -51,7 +51,7 @@ export default function AudioScanner({ onClose, onComplete }: AudioScannerProps)
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
 
     let x = 0;
@@ -59,7 +59,9 @@ export default function AudioScanner({ onClose, onComplete }: AudioScannerProps)
       if (!ctx || !analyserRef.current || !dataArrayRef.current) return;
       
       animationFrameRef.current = requestAnimationFrame(draw);
-      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      if (analyserRef.current && dataArrayRef.current) {
+        analyserRef.current.getByteFrequencyData(dataArrayRef.current as any);
+      }
 
       // Spectrogram layout
       const width = canvas.width;

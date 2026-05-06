@@ -4,28 +4,12 @@
     "slug": "dermai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/icons/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "userInterfaceStyle": "dark",
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.arogya.dermai"
-    },
-    "web": {
-      "favicon": "./assets/icons/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -34,15 +18,15 @@
         {
           "cameraPermission": "Allow DermAI to access your camera."
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-font"
     ],
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": ""
       }
-    }
+    },
+    "scheme": "dermai"
   }
 }

@@ -1,153 +1,285 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, History, Info, ChevronRight } from 'lucide-react-native';
-import { AIStatusCard } from '../../components/AIStatusCard';
+import { Camera, History, ChevronRight, Shield, Zap, ArrowLeft, MapPin, FileText } from 'lucide-react-native';
 
 export default function UserHome() {
   const router = useRouter();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcome}>Welcome Back</Text>
-        <Text style={styles.subtext}>Your health is our priority.</Text>
-      </View>
-
-      <AIStatusCard />
-
-      <TouchableOpacity 
-        style={styles.mainAction}
-        onPress={() => router.push('/(user)/scan')}
-      >
-        <View style={styles.actionIcon}>
-          <Camera size={40} color="#000" />
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.brandText}>DermAI</Text>
+          <Text style={styles.headerTitle}>Diagnostics</Text>
+          <View style={{ width: 40 }} />
         </View>
-        <View>
-          <Text style={styles.actionTitle}>Start New Scan</Text>
-          <Text style={styles.actionDesc}>Capture skin condition for analysis</Text>
-        </View>
-        <ChevronRight size={24} color="#000" />
-      </TouchableOpacity>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <History size={18} color="#FFF" />
-          <Text style={styles.sectionTitle}>Recent History</Text>
+        {/* AI Status */}
+        <View style={styles.aiCard}>
+          <View style={styles.aiRow}>
+            <Zap size={18} color="#00E5FF" />
+            <Text style={styles.aiTitle}>OFFLINE NEURAL ENGINE</Text>
+          </View>
+          <View style={styles.aiRow}>
+            <Shield size={14} color="#50E3C2" />
+            <Text style={styles.aiStatus}>100% On-Device • No Cloud</Text>
+          </View>
         </View>
-        
-        <View style={styles.emptyHistory}>
-          <Text style={styles.emptyText}>No recent scans found.</Text>
-          <Text style={styles.emptySubtext}>Your diagnostic history will appear here.</Text>
-        </View>
-      </View>
 
-      <View style={styles.infoCard}>
-        <Info size={20} color="#00E5FF" />
-        <Text style={styles.infoText}>
-          DermAI uses advanced on-device AI to detect up to 12 different skin conditions instantly.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Main Action */}
+        <TouchableOpacity 
+          style={styles.scanCard}
+          onPress={() => router.push('/(user)/scan')}
+        >
+          <View style={styles.scanIconBox}>
+            <Camera size={36} color="#000" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.scanTitle}>Start New Scan</Text>
+            <Text style={styles.scanDesc}>Capture skin condition for AI analysis</Text>
+          </View>
+          <ChevronRight size={22} color="rgba(0,0,0,0.3)" />
+        </TouchableOpacity>
+
+        {/* Heatmap */}
+        <TouchableOpacity 
+          style={styles.heatmapCard}
+          onPress={() => router.push('/(user)/heatmap')}
+        >
+          <View style={styles.heatmapIcon}>
+            <MapPin size={24} color="#FF4B6E" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heatmapTitle}>Disease Heatmap</Text>
+            <Text style={styles.heatmapDesc}>District-wise outbreak tracker</Text>
+          </View>
+          <ChevronRight size={20} color="rgba(255,255,255,0.2)" />
+        </TouchableOpacity>
+
+        {/* History Section */}
+        <Text style={styles.sectionTitle}>Recent Scans</Text>
+
+        {[
+          { condition: 'Eczema', confidence: '85%', time: '2 hours ago', risk: 'Low' },
+          { condition: 'Psoriasis', confidence: '72%', time: '1 day ago', risk: 'Medium' },
+        ].map((item, i) => (
+          <View key={i} style={styles.historyCard}>
+            <View style={styles.historyIcon}>
+              <History size={18} color="rgba(255,255,255,0.3)" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.historyTitle}>{item.condition}</Text>
+              <Text style={styles.historyMeta}>{item.confidence} confidence • {item.time}</Text>
+            </View>
+            <View style={[styles.riskBadge, item.risk === 'Low' ? styles.riskLow : styles.riskMed]}>
+              <Text style={[styles.riskText, item.risk === 'Low' ? styles.riskTextLow : styles.riskTextMed]}>
+                {item.risk}
+              </Text>
+            </View>
+          </View>
+        ))}
+        {/* Get Report */}
+        <TouchableOpacity 
+          style={styles.reportBtn}
+          onPress={() => router.push('/(user)/report')}
+        >
+          <FileText size={20} color="#000" />
+          <Text style={styles.reportBtnText}>GET REPORT</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 60 }} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0A0A0F',
+  },
+  content: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 50,
   },
   header: {
-    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 32,
   },
-  welcome: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
     color: '#FFF',
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  subtext: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 16,
+  brandText: {
+    color: '#00E5FF',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
-  mainAction: {
+  aiCard: {
+    backgroundColor: 'rgba(0, 229, 255, 0.04)',
+    borderRadius: 20,
+    padding: 18,
+    gap: 10,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.12)',
+  },
+  aiRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  aiTitle: {
+    color: '#00E5FF',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  aiStatus: {
+    color: '#50E3C2',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  scanCard: {
     backgroundColor: '#00E5FF',
-    borderRadius: 30,
+    borderRadius: 28,
     padding: 24,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
-    marginVertical: 20,
-    elevation: 8,
-    shadowColor: '#00E5FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    marginBottom: 36,
+    ...Platform.select({
+      web: { boxShadow: '0 6px 16px rgba(0, 229, 255, 0.35)' },
+      default: {
+        shadowColor: '#00E5FF',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 10,
+      }
+    })
   },
-  actionIcon: {
-    width: 64,
-    height: 64,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 32,
+  scanIconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  actionTitle: {
+  scanTitle: {
     color: '#000',
     fontSize: 20,
     fontWeight: 'bold',
   },
-  actionDesc: {
-    color: 'rgba(0,0,0,0.6)',
+  scanDesc: {
+    color: 'rgba(0,0,0,0.5)',
     fontSize: 12,
-    fontWeight: '500',
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
+    marginTop: 2,
   },
   sectionTitle: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 16,
   },
-  emptyHistory: {
-    padding: 40,
+  historyCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 20,
+    padding: 18,
+    gap: 14,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  emptyText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  historyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  emptySubtext: {
+  historyTitle: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  historyMeta: {
     color: 'rgba(255,255,255,0.3)',
     fontSize: 11,
-    textAlign: 'center',
+    marginTop: 2,
   },
-  infoCard: {
-    backgroundColor: 'rgba(0, 229, 255, 0.05)',
-    padding: 20,
-    borderRadius: 20,
+  riskBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  riskLow: {
+    backgroundColor: 'rgba(80, 227, 194, 0.1)',
+  },
+  riskMed: {
+    backgroundColor: 'rgba(255, 167, 38, 0.1)',
+  },
+  riskText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  riskTextLow: {
+    color: '#50E3C2',
+  },
+  riskTextMed: {
+    color: '#FFA726',
+  },
+  heatmapCard: {
     flexDirection: 'row',
-    gap: 15,
-    marginTop: 40,
-    marginBottom: 60,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 75, 110, 0.04)',
+    borderRadius: 22,
+    padding: 20,
+    gap: 16,
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 75, 110, 0.15)',
   },
-  infoText: {
-    color: 'rgba(0, 229, 255, 0.8)',
-    fontSize: 12,
-    lineHeight: 18,
-    flex: 1,
+  heatmapIcon: {
+    width: 48, height: 48, borderRadius: 14,
+    backgroundColor: 'rgba(255, 75, 110, 0.12)',
+    justifyContent: 'center', alignItems: 'center',
   },
+  ashaEntryTitle: { color: '#50E3C2', fontSize: 15, fontWeight: 'bold' },
+  ashaEntryDesc: { color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 2 },
+  heatmapTitle: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
+  heatmapDesc: { color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 2 },
+  reportBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#00E5FF', borderRadius: 18,
+    paddingVertical: 18, gap: 12, marginTop: 24,
+    ...Platform.select({
+      web: { boxShadow: '0 4px 12px rgba(0, 229, 255, 0.3)' },
+      default: {
+        shadowColor: '#00E5FF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3, shadowRadius: 12,
+      }
+    })
+  },
+  reportBtnText: { color: '#000', fontSize: 13, fontWeight: '900', letterSpacing: 2 },
 });
