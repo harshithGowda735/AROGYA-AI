@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;600;700&display=swap');
+
+@theme {
+  --font-serif: "Instrument Serif", serif;
+  --font-sans: "Outfit", sans-serif;
+
+  --color-brand-cyan: #00E5FF;
+  --color-brand-gold: #FBC02D;
+  --color-surface-dark: #121212;
+  --color-container-dark: #2C3E50;
+
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-surface-dark text-white font-sans antialiased selection:bg-brand-cyan/30;
+    margin: 0;
+    min-height: 100vh;
+    touch-action: manipulation; /* Prevent double-tap zoom for better mobile feel */
+  }
+
+  h1, h2, h3 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-container-dark/40 backdrop-blur-xl border border-white/10 rounded-[24px] shadow-2xl;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .glass-button {
+    @apply relative overflow-hidden flex items-center justify-center p-6 rounded-[24px] transition-all duration-500 ease-out;
+    @apply bg-white/5 border border-white/10 backdrop-blur-lg;
+    @apply hover:bg-white/10 active:scale-90 active:bg-white/20;
+  }
+
+  .neo-glow-cyan {
+    @apply shadow-[0_0_30px_rgba(0,229,255,0.4)];
+  }
+
+  .neo-glow-gold {
+    @apply shadow-[0_0_30px_rgba(251,192,45,0.4)];
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-surface-dark;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full;
+}

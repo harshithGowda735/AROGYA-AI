@@ -1,0 +1,15 @@
+{
+  "name": "AROGYA AI",
+  "description": "Offline-first AI healthcare system for rural India with dual patient/ASHA interfaces. Direct-action clinical diagnosis without registration or internet dependencies.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "Offline AI Diagnosis",
+    "ASHA Worker Field Mode",
+    "Multilingual Voice Support",
+    "Local Image Inference"
+  ]
+}
