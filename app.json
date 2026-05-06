@@ -9,7 +9,11 @@
       "**/*"
     ],
     "android": {
-      "package": "com.arogya.dermai"
+      "package": "com.arogya.dermai",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -25,8 +29,12 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "5fd94ba9-5625-4e7b-a071-d3f6c7d8e665"
       }
     },
-    "scheme": "dermai"
+    "scheme": "dermai",
+    "owner": "harshithg"
   }
 }
