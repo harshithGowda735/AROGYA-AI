@@ -1,4 +1,4 @@
-# AROGYA AI: Offline-First Skin Diagnostic Intelligence
+# DERM AI: Offline-First Skin Diagnostic Intelligence
 
 DermAI is a robust, offline-first healthcare application designed for rural India. It provides instant, on-device screening for 12 skin conditions using TensorFlow Lite, empowering both patients and ASHA workers with clinical-grade AI insights without requiring internet connectivity.
 
