@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Users, Plus, ChevronRight, BarChart3, FileStack, ArrowLeft, Shield, MapPin, AlertTriangle } from 'lucide-react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 const DISTRICT_DATA = [
   { name: 'Bengaluru Urban', cases: 342, risk: 'high', disease: 'Eczema' },
@@ -56,6 +58,85 @@ export default function AshaDashboard() {
     }
   };
 
+  const generateRegionalReport = async () => {
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regional Health Report - Karnataka</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #1a1a2e; }
+    .header { text-align: center; border-bottom: 4px solid #00E5FF; padding-bottom: 20px; margin-bottom: 30px; }
+    .title { font-size: 24px; font-weight: 900; color: #00E5FF; }
+    .region { font-size: 14px; color: #666; margin-top: 5px; }
+    .stats-container { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .stat-box { flex: 1; padding: 15px; background: #f8f9fa; border-radius: 12px; margin-right: 10px; text-align: center; }
+    .stat-label { font-size: 10px; color: #888; font-weight: 900; }
+    .stat-value { font-size: 20px; font-weight: 900; color: #1a1a2e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { text-align: left; background: #f8f9fa; padding: 12px; font-size: 12px; font-weight: 900; color: #00E5FF; }
+    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; }
+    .risk-high { color: #FF4B6E; font-weight: bold; }
+    .risk-medium { color: #FFA726; font-weight: bold; }
+    .risk-low { color: #50E3C2; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">DermAI Regional Health Summary</div>
+    <div class="region">Karnataka Rural Health Division | ${new Date().toLocaleDateString()}</div>
+  </div>
+
+  <div class="stats-container">
+    <div class="stat-box"><div class="stat-label">TOTAL CASES</div><div class="stat-value">${totalCases}</div></div>
+    <div class="stat-box"><div class="stat-label">HIGH RISK ZONES</div><div class="stat-value">${highRisk}</div></div>
+    <div class="stat-box"><div class="stat-label">GEN. ADVICE</div><div class="stat-value">Eczema Alert</div></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>District Name</th><th>Reported Cases</th><th>Risk Status</th><th>Top Disease</th></tr>
+    </thead>
+    <tbody>
+      ${DISTRICT_DATA.map(d => `
+        <tr>
+          <td>${d.name}</td>
+          <td>${d.cases}</td>
+          <td class="risk-${d.risk}">${d.risk.toUpperCase()}</td>
+          <td>${d.disease}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div style="margin-top: 40px; padding: 20px; background: #fff9f9; border-radius: 12px; border: 1px solid #ff4b6e20;">
+    <div style="font-size: 12px; font-weight: 900; color: #FF4B6E; margin-bottom: 8px;">CLINICAL RECOMMENDATION</div>
+    <div style="font-size: 12px; color: #666; line-height: 1.6;">
+      Based on the regional heatmap, the ASHA workers in **Bengaluru Urban** and **Mandya** should prioritize high-risk door-to-door screenings.
+      Melanoma and Scabies cases are trending upward in high-density rural areas.
+    </div>
+  </div>
+</body>
+</html>`;
+
+    if (Platform.OS === 'web') {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+      }
+    } else {
+      try {
+        const { uri } = await Print.printToFileAsync({ html });
+        await Sharing.shareAsync(uri);
+      } catch (e) {
+        Alert.alert('Error', 'Could not generate regional report.');
+      }
+    }
+  };
+
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case 'high': return '#FF4B6E';
@@ -71,7 +152,7 @@ export default function AshaDashboard() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
-            onPress={() => router.canGoBack() ? router.back() : router.replace('/(user)/home')} 
+            onPress={() => router.replace('/')} 
             style={styles.backBtn}
           >
             <ArrowLeft size={22} color="#FFF" />
@@ -185,7 +266,7 @@ export default function AshaDashboard() {
         ))}
 
         {/* Report Button */}
-        <TouchableOpacity style={styles.reportBtn}>
+        <TouchableOpacity style={styles.reportBtn} onPress={generateRegionalReport}>
           <BarChart3 size={20} color="#000" />
           <Text style={styles.reportText}>Generate Regional Report</Text>
         </TouchableOpacity>

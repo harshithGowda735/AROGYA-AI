@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Animated, Easing } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { RefreshCw, Zap } from 'lucide-react-native';
-import * as Reanimated from 'react-native-reanimated';
 import { TFLiteEngine } from '../../services/tfliteEngine';
 import { StorageService } from '../../services/storage';
 
@@ -10,12 +9,32 @@ export default function ProcessingUI() {
   const { uri } = useLocalSearchParams();
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const rotationAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotationAnim, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const rotation = rotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   const steps = [
-    "Validating Image Quality",
-    "Extracting Dermatological Features",
-    "Running AI Inference (MobileNetV2)",
-    "Generating Clinical Result"
+    "Validating Image Quality...",
+    "Extracting Morphological Features...",
+    "Running AI Inference (DermAI v2.5)...",
+    "Generating Clinical Risk Score...",
+    "Recommendation Ready"
   ];
 
   useEffect(() => {
@@ -27,17 +46,22 @@ export default function ProcessingUI() {
       } else {
         clearInterval(interval);
       }
-    }, 1000);
+    }, 1200);
 
     const runInference = async () => {
       try {
         const result = await TFLiteEngine.classifyImage(uri as string);
+        
+        if (result.qualityError) {
+          setError(result.qualityError);
+          return;
+        }
+
         await StorageService.saveDiagnosis({
           ...result,
-          imageUri: uri,
+          imageUri: uri as string,
         });
         
-        // Brief delay for better UX
         setTimeout(() => {
           router.replace({
             pathname: '/(user)/result',
@@ -46,28 +70,40 @@ export default function ProcessingUI() {
         }, 1500);
       } catch (e) {
         console.error(e);
-        router.back();
+        setError("Analysis failed. Please check your connection.");
       }
     };
 
     runInference();
 
     return () => clearInterval(interval);
-  }, []);
+  }, [uri]);
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.animationBox}>
-           <RefreshCw size={48} color="#00E5FF" style={styles.spinner} />
+           <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+            <RefreshCw size={48} color="#00E5FF" />
+           </Animated.View>
         </View>
 
-        <Text style={styles.title}>Analyzing Scan...</Text>
+        <Text style={styles.title}>{error ? "Analysis Halted" : "Analyzing Scan..."}</Text>
         <Text style={styles.subtitle}>
-          Neural processing active. No cloud dependency.
+          {error || "Neural processing active. No cloud dependency."}
         </Text>
 
-        <View style={styles.stepsContainer}>
+        {error && (
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => router.back()}
+          >
+            <Text style={styles.retryButtonText}>RETAKE PHOTO</Text>
+          </TouchableOpacity>
+        )}
+
+        {!error && (
+          <View style={styles.stepsContainer}>
           {steps.map((s, i) => (
             <View key={i} style={styles.stepRow}>
               <View style={styles.stepInfo}>
@@ -83,6 +119,7 @@ export default function ProcessingUI() {
             </View>
           ))}
         </View>
+        )}
 
         <View style={styles.badge}>
           <Zap size={14} color="#00E5FF" />
@@ -172,6 +209,19 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#00E5FF',
     fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  retryButton: {
+    backgroundColor: '#00E5FF',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    color: '#000',
+    fontSize: 12,
     fontWeight: 'bold',
     letterSpacing: 1,
   },

@@ -7,4 +7,7 @@ config.resolver.blockList = [
   /.*\/src\/.*/,
 ];
 
+// Add tflite to asset extensions
+config.resolver.assetExts.push('tflite');
+
 module.exports = config;

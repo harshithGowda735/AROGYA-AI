@@ -25,6 +25,22 @@ export default function ResultScreen() {
       <View style={styles.content}>
         <ResultCard prediction={data.topPrediction} />
 
+        {data.topPrediction.emergencyAlert && (
+          <View style={[styles.warningBox, { backgroundColor: 'rgba(255, 75, 110, 0.1)', borderColor: 'rgba(255, 75, 110, 0.3)' }]}>
+            <Text style={[styles.warningTitle, { color: '#FF4B6E' }]}>EMERGENCY ALERT</Text>
+            <Text style={[styles.warningText, { color: '#FF4B6E' }]}>
+              {data.topPrediction.emergencyAlert}
+            </Text>
+          </View>
+        )}
+
+        {data.topPrediction.doctorContact && (
+          <View style={styles.contactBox}>
+            <Text style={styles.contactTitle}>Nearest Specialist & Contact</Text>
+            <Text style={styles.contactText}>{data.topPrediction.doctorContact}</Text>
+          </View>
+        )}
+
         <View style={styles.warningBox}>
           <Text style={styles.warningTitle}>Disclaimer</Text>
           <Text style={styles.warningText}>
@@ -94,6 +110,26 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 193, 7, 0.6)',
     fontSize: 12,
     lineHeight: 18,
+  },
+  contactBox: {
+    backgroundColor: 'rgba(80, 227, 194, 0.1)',
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(80, 227, 194, 0.3)',
+  },
+  contactTitle: {
+    color: '#50E3C2',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  contactText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   homeButton: {
     backgroundColor: '#FFF',

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, AlertTriangle, MapPin, TrendingUp } from 'lucide-react-native';
+import { WebView } from 'react-native-webview';
 
 const DISTRICT_DATA = [
   { name: 'Bengaluru Urban', lat: 12.9716, lng: 77.5946, cases: 342, risk: 'high', disease: 'Eczema' },
@@ -141,10 +142,7 @@ export default function HeatmapScreen() {
             style={{ width: '100%', height: '100%', border: 'none' }}
           />
         ) : (
-          <View style={styles.mapFallback}>
-            <MapPin size={48} color="#00E5FF" />
-            <Text style={styles.mapFallbackText}>Map available in web view</Text>
-          </View>
+          <WebView source={{ html: mapHTML }} style={{ flex: 1 }} />
         )}
       </View>
 
@@ -206,27 +204,35 @@ const styles = StyleSheet.create({
   /* Stats Panel */
   statsPanel: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(10,10,15,0.9)',
-    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)',
-    paddingVertical: 16,
+    backgroundColor: 'rgba(15,15,20,0.95)',
+    borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
   },
-  statsScroll: { paddingHorizontal: 20, gap: 12 },
+  statsScroll: { paddingHorizontal: 20, gap: 16, alignItems: 'center' },
   summaryCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 16, padding: 14, alignItems: 'center',
-    borderWidth: 1, minWidth: 90, gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 20, padding: 18, alignItems: 'center',
+    borderWidth: 1, minWidth: 100, gap: 8,
   },
-  summaryValue: { color: '#FFF', fontSize: 22, fontWeight: 'bold' },
+  summaryValue: { color: '#FFF', fontSize: 26, fontWeight: '900' },
   summaryLabel: {
-    color: 'rgba(255,255,255,0.35)', fontSize: 9, fontWeight: '900', letterSpacing: 1.5,
+    color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '900', letterSpacing: 1.5,
   },
   districtChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14,
-    paddingHorizontal: 14, paddingVertical: 12,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20,
+    paddingHorizontal: 20, paddingVertical: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
   },
-  riskDot: { width: 10, height: 10, borderRadius: 5 },
-  chipName: { color: '#FFF', fontSize: 13, fontWeight: 'bold' },
-  chipDisease: { color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 1 },
+  riskDot: { width: 12, height: 12, borderRadius: 6 },
+  chipName: { color: '#FFF', fontSize: 15, fontWeight: 'bold' },
+  chipDisease: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, fontWeight: '500' },
 });

@@ -8,6 +8,7 @@ interface ResultCardProps {
     probability: number;
     risk: string;
     advice: string;
+    markers?: string[];
   };
 }
 
@@ -40,6 +41,19 @@ export const ResultCard: React.FC<ResultCardProps> = ({ prediction }) => {
           </Text>
         </View>
       </View>
+
+      {prediction.markers && prediction.markers.length > 0 && (
+        <View style={styles.markersContainer}>
+          <Text style={styles.statLabel}>CLINICAL MARKERS OBSERVED</Text>
+          <View style={styles.markersList}>
+            {prediction.markers.map((m, i) => (
+              <View key={i} style={styles.markerTag}>
+                <Text style={styles.markerText}>{m}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       <View style={styles.divider} />
 
@@ -115,5 +129,27 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
     lineHeight: 20,
+  },
+  markersContainer: {
+    marginTop: 8,
+  },
+  markersList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  markerTag: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.2)',
+  },
+  markerText: {
+    color: '#00E5FF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

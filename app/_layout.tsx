@@ -1,7 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet, Platform } from 'react-native';
-import { FloatingChatbot } from '../components/FloatingChatbot';
 
 export default function Layout() {
   return (
@@ -15,8 +14,6 @@ export default function Layout() {
             animation: 'fade',
           }}
         />
-        {/* Floating AI Chatbot — visible on every screen */}
-        <FloatingChatbot />
       </View>
     </View>
   );
@@ -39,6 +36,7 @@ const styles = StyleSheet.create({
     borderRadius: Platform.OS === 'web' ? 24 : 0,
     borderWidth: Platform.OS === 'web' ? 1 : 0,
     borderColor: 'rgba(255,255,255,0.08)',
+    // Shadow for the phone frame look
     ...Platform.select({
       web: { boxShadow: '0 0 40px rgba(0, 229, 255, 0.1)' },
       default: {
@@ -46,7 +44,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.1,
         shadowRadius: 40,
-      },
-    }),
+      }
+    })
   },
 });

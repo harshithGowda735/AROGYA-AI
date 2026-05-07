@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { User, Calendar, Weight, MapPin, ChevronRight, Navigation, Search, Check, Upload, FileText, X } from 'lucide-react-native';
+import * as Location from 'expo-location';
 import { StorageService } from '../services/storage';
 
 const SKIN_CONDITIONS = [
@@ -62,16 +63,44 @@ export default function Index() {
         }
       );
     } else {
-      setTimeout(() => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          throw new Error('Permission denied');
+        }
+        
+        const location = await Location.getCurrentPositionAsync({});
+        const lat = location.coords.latitude;
+        const lng = location.coords.longitude;
+        
+        let villageName = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`;
+        try {
+          const geocode = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+          if (geocode && geocode.length > 0) {
+            villageName = geocode[0].city || geocode[0].subregion || geocode[0].region || villageName;
+          }
+        } catch (e) {
+          console.warn("Geocode failed", e);
+        }
+
         setProfile(p => ({
           ...p,
-          latitude: '12.9716',
-          longitude: '77.5946',
-          village: 'Bengaluru (Auto-detected)',
+          latitude: lat.toFixed(4),
+          longitude: lng.toFixed(4),
+          village: villageName,
           locationMethod: 'gps',
         }));
-        setDetecting(false);
-      }, 1500);
+      } catch (error) {
+        // Fallback to Hassan if failed
+        setProfile(p => ({
+          ...p,
+          latitude: '13.0072',
+          longitude: '76.1004',
+          village: 'Hassan (Default)',
+          locationMethod: 'gps',
+        }));
+      }
+      setDetecting(false);
     }
   };
 

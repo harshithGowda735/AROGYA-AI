@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  StyleSheet, Text, View, TouchableOpacity, Platform, Image,
+  StyleSheet, Text, View, TouchableOpacity, Platform, Image, Animated, Easing
 } from 'react-native';
 import { CameraView as ExpoCameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,6 +15,34 @@ export const CameraView: React.FC<CameraViewProps> = ({ onClose, onCapture }) =>
   const [permission, requestPermission] = useCameraPermissions();
   const [preview, setPreview] = useState<string | null>(null);
   const cameraRef = useRef<any>(null);
+  const scanAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const startAnimation = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scanAnim, {
+            toValue: 1,
+            duration: 2000,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(scanAnim, {
+            toValue: 0,
+            duration: 2000,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+    startAnimation();
+  }, []);
+
+  const translateY = scanAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 258], // 260 height - 2 line height
+  });
 
   // ── Pick from gallery ────────────────────────────────────────────────────────
   const handlePickImage = async () => {
@@ -104,7 +132,13 @@ export const CameraView: React.FC<CameraViewProps> = ({ onClose, onCapture }) =>
           </View>
 
           <View style={styles.reticleContainer}>
-            <View style={styles.reticle} />
+            <View style={styles.scanBox}>
+              <View style={[styles.corner, styles.topLeft]} />
+              <View style={[styles.corner, styles.topRight]} />
+              <View style={[styles.corner, styles.bottomLeft]} />
+              <View style={[styles.corner, styles.bottomRight]} />
+              <Animated.View style={[styles.scanLine, { transform: [{ translateY }] }]} />
+            </View>
           </View>
 
           <View style={styles.previewActions}>
@@ -125,48 +159,53 @@ export const CameraView: React.FC<CameraViewProps> = ({ onClose, onCapture }) =>
   // ── Live camera screen ───────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      <ExpoCameraView style={styles.camera} ref={cameraRef}>
-        <View style={styles.overlay}>
-          {/* Top bar */}
-          <View style={styles.topBar}>
-            <TouchableOpacity onPress={onClose} style={styles.iconButton}>
-              <X color="white" size={22} />
-            </TouchableOpacity>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>READY FOR SCAN</Text>
-            </View>
-            <View style={{ width: 48 }} />
+      <ExpoCameraView style={styles.camera} ref={cameraRef} />
+      <View style={styles.overlay}>
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+            <X color="white" size={22} />
+          </TouchableOpacity>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>READY FOR SCAN</Text>
           </View>
-
-          {/* Scan guide */}
-          <View style={styles.reticleContainer}>
-            <View style={styles.reticle} />
-            <Text style={styles.guideText}>Centre the skin area inside the circle</Text>
-          </View>
-
-          {/* Bottom controls */}
-          <View style={styles.bottomBar}>
-            {/* Upload from gallery */}
-            <TouchableOpacity onPress={handlePickImage} style={styles.sideButton}>
-              <ImageIcon color="white" size={24} />
-              <Text style={styles.sideLabel}>Gallery</Text>
-            </TouchableOpacity>
-
-            {/* Capture button */}
-            <TouchableOpacity onPress={handleCapture} style={styles.captureButton}>
-              <View style={styles.captureButtonInner}>
-                <Camera color="#000" size={30} />
-              </View>
-            </TouchableOpacity>
-
-            {/* Flip (placeholder) */}
-            <TouchableOpacity style={styles.sideButton}>
-              <RefreshCw color="white" size={24} />
-              <Text style={styles.sideLabel}>Flip</Text>
-            </TouchableOpacity>
-          </View>
+          <View style={{ width: 48 }} />
         </View>
-      </ExpoCameraView>
+
+        {/* Scan guide */}
+        <View style={styles.reticleContainer}>
+          <View style={styles.scanBox}>
+            <View style={[styles.corner, styles.topLeft]} />
+            <View style={[styles.corner, styles.topRight]} />
+            <View style={[styles.corner, styles.bottomLeft]} />
+            <View style={[styles.corner, styles.bottomRight]} />
+            <Animated.View style={[styles.scanLine, { transform: [{ translateY }] }]} />
+          </View>
+          <Text style={styles.guideText}>ALIGN SKIN AREA WITHIN THE BOX</Text>
+        </View>
+
+        {/* Bottom controls */}
+        <View style={styles.bottomBar}>
+          {/* Upload from gallery */}
+          <TouchableOpacity onPress={handlePickImage} style={styles.sideButton}>
+            <ImageIcon color="white" size={24} />
+            <Text style={styles.sideLabel}>Gallery</Text>
+          </TouchableOpacity>
+
+          {/* Capture button */}
+          <TouchableOpacity onPress={handleCapture} style={styles.captureButton}>
+            <View style={styles.captureButtonInner}>
+              <Camera color="#000" size={30} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Flip (placeholder) */}
+          <TouchableOpacity style={styles.sideButton}>
+            <RefreshCw color="white" size={24} />
+            <Text style={styles.sideLabel}>Flip</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -175,7 +214,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   camera: { flex: 1 },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.15)',
     justifyContent: 'space-between',
     padding: 20,
@@ -209,20 +248,49 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
+    gap: 24,
   },
-  reticle: {
-    width: 240,
-    height: 240,
-    borderWidth: 2,
-    borderColor: 'rgba(0, 229, 255, 0.6)',
-    borderRadius: 120,
-    borderStyle: 'dashed',
+  scanBox: {
+    width: 260,
+    height: 260,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  corner: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderColor: '#00E5FF',
+    borderWidth: 4,
+  },
+  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 16 },
+  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 16 },
+  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 16 },
+  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 16 },
+  scanLine: {
+    width: '100%',
+    height: 2,
+    backgroundColor: '#00E5FF',
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    opacity: 1,
+    position: 'absolute',
+    top: 0,
+    zIndex: 5,
   },
   guideText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 11,
+    color: '#00E5FF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
     textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   bottomBar: {
     flexDirection: 'row',
@@ -262,7 +330,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Preview ──────────────────────────────────────────────────────────────────
-  previewImage: { width: '100%', height: '100%', position: 'absolute' },
+  previewImage: { width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 },
   previewOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',

@@ -12,7 +12,12 @@ export default function UserHome() {
         <View style={styles.header}>
           <Text style={styles.brandText}>DermAI</Text>
           <Text style={styles.headerTitle}>Diagnostics</Text>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity 
+            style={styles.backBtn}
+            onPress={() => router.replace('/')}
+          >
+            <ArrowLeft size={20} color="#FFF" />
+          </TouchableOpacity>
         </View>
 
         {/* AI Status */}
