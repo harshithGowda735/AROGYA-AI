@@ -88,9 +88,9 @@ export default function ProcessingUI() {
            </Animated.View>
         </View>
 
-        <Text style={styles.title}>{error ? "Analysis Halted" : "Analyzing Scan..."}</Text>
+        <Text style={styles.title}>{error ? "Analysis Halted" : "Predictive Analysis Running..."}</Text>
         <Text style={styles.subtitle}>
-          {error || "Neural processing active. No cloud dependency."}
+          {error || "Neural Engine active. Direct hardware execution."}
         </Text>
 
         {error && (

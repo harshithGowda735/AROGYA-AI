@@ -176,8 +176,8 @@ export default function BatchScan() {
 
   <div class="section">
     <div class="section-title">DIAGNOSTIC RESULT</div>
-    <div class="info-row"><span class="label">AI Condition</span><span class="value">${p.condition}</span></div>
-    <div class="info-row"><span class="label">AI Confidence</span><span class="value">${p.confidence}%</span></div>
+    <div class="info-row"><span class="label">Condition Detected</span><span class="value">${p.condition}</span></div>
+    <div class="info-row"><span class="label">Analysis Confidence</span><span class="value">${p.confidence}%</span></div>
     <div class="risk-box risk-${p.risk}">
       ${p.risk.toUpperCase()} RISK DETECTED
     </div>
@@ -361,7 +361,7 @@ export default function BatchScan() {
               <View style={[styles.cornerSmall, styles.bottomRightSmall]} />
               <Animated.View style={[styles.scanLineSmall, { transform: [{ translateY }] }]} />
             </View>
-            <Text style={styles.scanningTitle}>AI ENGINE ACTIVE</Text>
+            <Text style={styles.scanningTitle}>DERMAI ENGINE ACTIVE</Text>
             <View style={styles.logContainer}>
               {scanLogs.map((log, i) => (
                 <Text key={i} style={styles.logText}>{log}</Text>
